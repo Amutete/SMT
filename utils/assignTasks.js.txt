@@ -1,0 +1,47 @@
+const User = require('../models/User');
+const Task = require('../models/Task');
+const UserTask = require('../models/UserTask');
+
+async function assignDailyTasks() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const users = await User.find({ isActive: true });
+
+  for (const user of users) {
+    let tasksCount = 0;
+    switch(user.investmentLevel) {
+      case 'freelance_4000': tasksCount = 8; break;
+      case 'freelance_10000': tasksCount = 8; break;
+      case 'freelance_25000': tasksCount = 6; break;
+      case 'freelance_50000': tasksCount = 6; break;
+      case 'teamleader': tasksCount = 4; break;
+      case 'supervisor': tasksCount = 3; break;
+      case 'manager': tasksCount = 2; break;
+      default: tasksCount = 0;
+    }
+
+    if (tasksCount === 0) continue;
+
+    const existingTasks = await UserTask.find({ user: user._id, assignedDate: today });
+    if (existingTasks.length >= tasksCount) continue;
+
+    const allTasks = await Task.find();
+    if (allTasks.length === 0) continue;
+
+    const shuffled = allTasks.sort(() => 0.5 - Math.random());
+    const tasksToAssign = shuffled.slice(0, tasksCount);
+
+    for (const task of tasksToAssign) {
+      const userTask = new UserTask({
+        user: user._id,
+        task: task._id,
+        assignedDate: today,
+      });
+      await userTask.save();
+    }
+  }
+  console.log('Daily tasks assigned successfully');
+}
+
+module.exports = assignDailyTasks;
