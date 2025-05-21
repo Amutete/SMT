@@ -18,6 +18,11 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 
+// Root route to handle GET /
+app.get('/', (req, res) => {
+  res.send('API is running');
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
